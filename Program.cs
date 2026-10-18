@@ -5,13 +5,12 @@ using System.Drawing.Imaging;
 using System.Formats.Tar;
 using System.Runtime.InteropServices;
 using DirectXTexNet;
-using Infinite_module_test;
-using static Infinite_module_test.tag_structs;
 
 using DirectXTexNet;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using TagFramework.Src.TagFiles;
 
 
 namespace InfiniteTextureCompiler
@@ -54,7 +53,7 @@ namespace InfiniteTextureCompiler
         //    convert_image(input_path, output_path);
         //    Console.WriteLine("process complete.");
         //}
-        static tag load_tag(string file, string resource){
+        static Tag load_tag(string file, string resource){
             if (!File.Exists(file)) throw new Exception("file does not exist");
             byte[] file_bytes = File.ReadAllBytes(file);
 
@@ -65,7 +64,7 @@ namespace InfiniteTextureCompiler
             var v = new List<KeyValuePair<byte[], bool>>();
 
             v.Add(new(resource_bytes, true));
-            tag test = new tag(v);
+            Tag test = new Tag(v);
             if (!test.Load_tag_file(file_bytes)) throw new Exception("failed to load tag");
             return test;
         }
@@ -88,7 +87,7 @@ namespace InfiniteTextureCompiler
 
 
             // we now copy over this information to the loaded tag
-            tag bitmap_tag = load_tag(tag_file, tag_res_file);
+            Tag bitmap_tag = load_tag(tag_file, tag_res_file);
             bitmap_tag.set_basic("force bitmap format#overrides the format defined by usage", [0,0]);
             bitmap_tag.set_basic("bitmaps*\\0\\format*#DO NOT CHANGE", [11, 0]);
 
@@ -103,7 +102,7 @@ namespace InfiniteTextureCompiler
             streaming_tagblock.blocks.Clear();
 
 
-            tag.compiled_tag output = bitmap_tag.compile();
+            Tag.compiled_tag output = bitmap_tag.compile();
             // we aren't going to output resources with this, so we only need to worry about spitting out the main file
             File.WriteAllBytes(output_path, output.tag_bytes);
             for (int i = 0; i < output.resource_bytes.Count; i++)
@@ -155,7 +154,7 @@ namespace InfiniteTextureCompiler
                 Marshal.Copy(mipImage.Pixels, mipBytes, 0, mipBytes.Length);
 
 
-                tag bitmap_tag = load_tag(tag_file, tag_res_file);
+                Tag bitmap_tag = load_tag(tag_file, tag_res_file);
                 bitmap_tag.set_basic("force bitmap format#overrides the format defined by usage", new byte[] { 0, 0 });
                 bitmap_tag.set_number("max mipmap level#0 = use default defined by usage", "1");
                 bitmap_tag.set_basic("bitmaps*\\0\\format*#DO NOT CHANGE", new byte[] { 16, 0 });
@@ -168,7 +167,7 @@ namespace InfiniteTextureCompiler
                 var streaming_tagblock = bitmap_tag.get_tagblock( "bitmaps*\\0\\bitmap resource handle*\\\\streamingData*");
                 streaming_tagblock.blocks.Clear();
 
-                tag.compiled_tag output = bitmap_tag.compile();
+                Tag.compiled_tag output = bitmap_tag.compile();
                 File.WriteAllBytes( output_path, output.tag_bytes);
                 for (int i = 0; i < output.resource_bytes.Count; i++)
                     File.WriteAllBytes($"{output_path}_res_{i}",output.resource_bytes[i]);
